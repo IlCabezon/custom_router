@@ -1,6 +1,6 @@
 // native
-import { useEffect, useState } from "react";
-import { array } from "prop-types";
+import { Children, useEffect, useState } from "react";
+import { node } from "prop-types";
 
 // modules
 import { match } from "path-to-regexp";
@@ -10,13 +10,14 @@ import { EVENTS } from "../const";
 
 // components
 import NotFound from "../pages/NotFound";
+import { getCurrentPath } from "../utils/path";
 
-export default function Router({ routes }) {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+export default function Router({ children, DefaultComponent = NotFound }) {
+  const [currentPath, setCurrentPath] = useState(getCurrentPath());
 
   useEffect(() => {
     const onLocationChange = () => {
-      setCurrentPath(window.location.pathname);
+      setCurrentPath(getCurrentPath());
     };
 
     // para escuchar el evento
@@ -33,14 +34,25 @@ export default function Router({ routes }) {
   let routeParams = {};
   let queryParams = {};
 
-  const Page = routes.find(({ path }) => {
+  const routesFromChildren = (
+    Children.map(children, ({ type, props }) => {
+      const { name } = type;
+
+      const isRoute = name === "Route";
+      if (!isRoute) return null;
+
+      return props;
+    }) || []
+  ).filter(Boolean);
+
+  const Page = routesFromChildren.find(({ path }) => {
     window.location.search;
     if (window.location.search) {
       const formattedSearch = window.location.search
         .replace("?", "")
         .split("&");
       for (const search of formattedSearch) {
-        search.split("=")
+        search.split("=");
         const [key, value] = search.split("=");
         queryParams[key] = value;
       }
@@ -66,14 +78,11 @@ export default function Router({ routes }) {
   return Page ? (
     <Page routeParams={routeParams} queryParams={queryParams} />
   ) : (
-    <NotFound routeParams={routeParams} queryParams={queryParams} />
+    <DefaultComponent routeParams={routeParams} queryParams={queryParams} />
   );
 }
 
 Router.propTypes = {
-  routes: array,
-};
-
-Router.defaultProps = {
-  routes: [],
+  children: node,
+  DefaultComponent: node,
 };

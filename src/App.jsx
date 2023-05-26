@@ -1,31 +1,27 @@
 // styles
 import "./App.css";
 
-// components
-import Router from "./components/Router";
-import HomePage from "./pages/HomePage";
-import About from "./pages/About";
-import Search from "./pages/Search";
+// native
+import { lazy, Suspense } from "react";
 
-const routes = [
-  {
-    path: "/",
-    Component: HomePage,
-  },
-  {
-    path: "/about",
-    Component: About,
-  },
-  {
-    path: "/search",
-    Component: Search,
-  },
-];
+// components
+import Route from "./components/Route";
+import Router from "./components/Router";
+
+const About = lazy(() => import("./pages/About"));
+const Search = lazy(() => import("./pages/Search"));
+const HomePage = lazy(() => import("./pages/HomePage"));
 
 function App() {
   return (
     <main>
-      <Router routes={routes} />
+      <Suspense fallback={<p>cargando</p>}>
+        <Router>
+          <Route path="/" Component={HomePage} />
+          <Route path="/about" Component={About} />
+          <Route path="/search" Component={Search} />
+        </Router>
+      </Suspense>
     </main>
   );
 }
